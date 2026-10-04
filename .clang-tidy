@@ -1,0 +1,106 @@
+# clang-tidy configuration for the C++ simulation engine.
+#
+# Enable from CMake with the `x64-tidy` preset:
+#     cmake --preset x64-tidy
+#     cmake --build --preset x64-tidy
+#
+# The selection is intentionally opinionated: checks that matter for embedded /
+# avionics-adjacent C++ (modernisation, safety, readability) are on, and the
+# ones that merely argue about taste are off.
+
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: '.*/(include|src)/.*'
+
+FormatStyle: file
+
+CheckOptions:
+  # --- Naming -------------------------------------------------------------
+  - key: readability-identifier-naming.Class
+    value: CamelCase
+  - key: readability-identifier-naming.Struct
+    value: CamelCase
+  - key: readability-identifier-naming.Enum
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstant
+    value: UPPER_CASE
+  - key: readability-identifier-naming.Function
+    value: camelBack
+  - key: readability-identifier-naming.Method
+    value: camelBack
+  - key: readability-identifier-naming.Parameter
+    value: lower_case
+  - key: readability-identifier-naming.Member
+    value: lower_case_
+  - key: readability-identifier-naming.PrivateMember
+    value: lower_case_
+  - key: readability-identifier-naming.LocalVariable
+    value: lower_case
+  - key: readability-identifier-naming.GlobalConstant
+    value: UPPER_CASE
+  - key: readability-identifier-naming.GlobalConstantPointer
+    value: UPPER_CASE
+  - key: readability-identifier-naming.GlobalFunction
+    value: lower_case
+  - key: readability-identifier-naming.Namespace
+    value: lower_case
+
+  # --- Magic numbers ------------------------------------------------------
+  # Physical constants must be named; there is no excuse for a bare 0.101325
+  # in an atmosphere model.
+  - key: readability-magic-numbers.IgnoredIntegerValues
+    value: '0;1;2;3;-1'
+  - key: readability-magic-numbers.IgnoredFloatValues
+    value: '0.0;1.0;0.5;-1.0'
+  - key: readability-magic-numbers.IgnorePowersOf2IntegerValues
+    value: 'true'
+
+  # --- Explicit conversions ------------------------------------------------
+  # -Wconversion is already on; these keep the intent visible in the code.
+  - key: bugprone-narrowing-conversions.TypeAwareChecks
+    value: 'false'
+
+  # --- Readability / size ---------------------------------------------------
+  - key: readability-function-cognitive-complexity.Threshold
+    value: '25'
+  - key: readability-function-size.LineThreshold
+    value: '80'
+  - key: readability-function-size.StatementThreshold
+    value: '40'
+  - key: readability-identifier-length.MinimumVariableNameLength
+    value: '2'
+  - key: readability-identifier-length.IgnoredParameterNames
+    value: 'i;j;k;x;y;z;n;_'
+
+  # --- Braces around single statements --------------------------------------
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: '0'
+
+  # --- Constants ------------------------------------------------------------
+  - key: cppcoreguidelines-avoid-magic-numbers.UseConstants
+    value: 'true'
+
+  # --- Preprocessor ---------------------------------------------------------
+  - key: cppcoreguidelines-macro-usage.AllowedMacros
+    value: 'FSE_.*;WIN32_LEAN_AND_MEAN;NOMINMAX'
+
+  # --- Modernisation --------------------------------------------------------
+  - key: modernize-use-std-format.AllowStdFormat
+    value: 'false'
+
+  # --- Performance ----------------------------------------------------------
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: ''

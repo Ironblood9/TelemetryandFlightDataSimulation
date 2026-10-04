@@ -1,0 +1,65 @@
+# EditorConfig — https://editorconfig.org
+# Keep this file as the single source of truth for whitespace so that the
+# C++ engine, the WPF ground station and the CMake/CI files stay consistent
+# across Visual Studio, VS Code, clang-format and Rider.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# --- C++ --------------------------------------------------------------------
+[*.{h,hpp,hxx,hh,c,cc,cpp,cxx}]
+indent_size = 4
+max_line_length = 100
+
+# --- C# ---------------------------------------------------------------------
+[*.{cs,csx}]
+indent_size = 4
+max_line_length = 120
+dotnet_sort_system_directives_first = true
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_prefer_braces = true:suggestion
+
+[*.{csproj,props,targets,nuspec}]
+indent_size = 2
+
+# --- XAML -------------------------------------------------------------------
+[*.xaml]
+indent_size = 4
+
+# --- CMake ------------------------------------------------------------------
+[CMakeLists.txt]
+indent_size = 4
+max_line_length = 120
+
+[*.cmake]
+indent_size = 4
+max_line_length = 120
+
+# --- JSON / YAML ------------------------------------------------------------
+[{*.json,*.yml,*.yaml}]
+indent_size = 2
+
+# --- Build artefacts --------------------------------------------------------
+[*.{sln,vcxproj,vcxproj.filters,user,filters}]
+indent_size = 4
+
+# --- Documentation ----------------------------------------------------------
+[*.md]
+trim_trailing_whitespace = false
+
+# --- Windows-specific -------------------------------------------------------
+[*.{bat,cmd,ps1}]
+end_of_line = crlf
+indent_size = 4

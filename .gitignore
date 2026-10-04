@@ -361,3 +361,33 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# ---------------------------------------------------------------------------
+# CMake
+# ---------------------------------------------------------------------------
+# All CMake build trees live here (see CMakePresets.json: out/build/<preset>).
+/out/
+CMakeUserPresets.json
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+install_manifest.txt
+compile_commands.json
+
+# ---------------------------------------------------------------------------
+# clangd / clang-tidy caches
+# ---------------------------------------------------------------------------
+.clangd/
+.clang-tidy-cache/
+.cache/
+.cache-clangd/
+
+# ---------------------------------------------------------------------------
+# Flight data recordings produced by the simulator and the ground station.
+# Binary fixtures that ARE part of the test suite live in protocol/ and are
+# tracked explicitly (see protocol/golden_vectors.bin).
+*.tlm
+flight-*.csv
+artifacts/

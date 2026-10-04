@@ -1,9 +1,17 @@
 <Solution>
+  <!--
+    The C++ side is driven by CMake (see CMakePresets.json) and is therefore not
+    a member of this solution. Open the repository root as a CMake folder in
+    Visual Studio, or configure and build from the command line using the
+    x64-debug / x64-release presets.
+
+    GroundStationUI is kept here so that the WPF application keeps full
+    designer / hot-reload support, which the CMake folder view does not offer
+    for XAML.
+  -->
   <Configurations>
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
-    <Platform Name="x86" />
   </Configurations>
-  <Project Path="FlightSimulationEngine/FlightSimulationEngine.vcxproj" />
   <Project Path="GroundStationUI/GroundStationUI.csproj" />
 </Solution>

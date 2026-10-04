@@ -1,0 +1,194 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+
+jobs:
+  # -------------------------------------------------------------------------
+  # C++ engine: GCC and Clang with sanitizers on Linux, MSVC on Windows.
+  # The warning policy of every job is -Werror / /WX.
+  # -------------------------------------------------------------------------
+  cpp:
+    name: C++ · ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux / gcc / debug + ASan + UBSan
+            os: ubuntu-latest
+            preset: ci-gcc-debug
+          - name: linux / gcc / release
+            os: ubuntu-latest
+            preset: ci-gcc-release
+          - name: linux / clang / release
+            os: ubuntu-latest
+            preset: ci-clang-release
+          - name: windows / msvc / release
+            os: windows-latest
+            preset: ci-msvc-release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain · CMake + Ninja (POSIX)
+        if: runner.os != 'Windows'
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: '3.31.6'
+
+      - name: Toolchain · MSVC environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Toolchain · CMake + Ninja (Windows)
+        if: runner.os == 'Windows'
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: '3.31.6'
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }} --output-on-failure
+
+  # -------------------------------------------------------------------------
+  # Ground station. WPF requires a Windows host, so this job is Windows-only by
+  # necessity rather than by preference.
+  # -------------------------------------------------------------------------
+  ground-station:
+    name: Ground station · .NET
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore TelemetryandFlightDataSimulation.slnx
+
+      - name: Build
+        run: dotnet build TelemetryandFlightDataSimulation.slnx -c Release --no-restore
+
+      # Activates itself once the test project exists (milestone M5).
+      - name: Test
+        if: ${{ hashFiles('GroundStationUI.Tests/**/*.csproj') != '' }}
+        run: dotnet test GroundStationUI.Tests/GroundStationUI.Tests.csproj -c Release
+
+  # -------------------------------------------------------------------------
+  # Formatting gate. Keeps the codebase diffable, which matters more in a
+  # portfolio repository than in a single-developer one.
+  # -------------------------------------------------------------------------
+  lint:
+    name: Style · clang-format
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format-18
+
+      - name: Check formatting
+        run: |
+          set -euo pipefail
+          mapfile -t sources < <(git ls-files -- '*.cpp' '*.cc' '*.hpp' '*.h')
+          if [ "${#sources[@]}" -eq 0 ]; then
+            echo "No C++ sources to check yet."
+            exit 0
+          fi
+          clang-format-18 --dry-run --Werror "${sources[@]}"
+
+  # -------------------------------------------------------------------------
+  # Advisory static analysis. Non-blocking until the M1 code base is large
+  # enough for the check list in .clang-tidy to be calibrated.
+  # -------------------------------------------------------------------------
+  static-analysis:
+    name: Static analysis · clang-tidy (advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: '3.31.6'
+
+      - name: Install clang-tidy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy-18
+
+      - name: Configure
+        run: cmake --preset ci-gcc-release
+
+      - name: Run clang-tidy
+        run: |
+          set -euo pipefail
+          db=out/build/ci-gcc-release/compile_commands.json
+          test -f "$db"
+          mapfile -t sources < <(git ls-files -- '*.cpp')
+          if [ "${#sources[@]}" -eq 0 ]; then
+            echo "No C++ sources to analyse yet."
+            exit 0
+          fi
+          clang-tidy-18 -p out/build/ci-gcc-release "${sources[@]}"
+
+# ---------------------------------------------------------------------------
+# Container build. Enabled in milestone M7 together with Dockerfile.engine and
+# docker-compose.yml; kept here so the shape of the pipeline is visible early.
+#
+#   docker:
+#     name: Container · flight-sim
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: docker/setup-buildx-action@v3
+#       - name: Build image
+#         uses: docker/build-push-action@v6
+#         with:
+#           context: .
+#           file: FlightSimulationEngine/Dockerfile
+#           push: false
+#           tags: flight-sim:ci
+#           cache-from: type=gha
+#           cache-to: type=gha,mode=max
+# ---------------------------------------------------------------------------

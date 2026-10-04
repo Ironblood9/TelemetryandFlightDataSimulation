@@ -1,0 +1,203 @@
+{
+  "$schema": "https://cmake.org/preset-schema-v8.json",
+  "version": 8,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-vs",
+      "hidden": true,
+      "displayName": "Visual Studio generator (local development)",
+      "description": "Uses the Visual Studio 2026 generator so no developer shell / vcvarsall is required. Produces a multi-config build tree.",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "generator": "Visual Studio 18 2026",
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      },
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release"
+      }
+    },
+    {
+      "name": "x64-debug",
+      "displayName": "x64 | Debug",
+      "inherits": "windows-vs",
+      "cacheVariables": {
+        "FSE_BUILD_TESTS": "ON",
+        "FSE_WARNINGS_AS_ERRORS": "ON",
+        "FSE_ENABLE_CLANG_TIDY": "OFF"
+      }
+    },
+    {
+      "name": "x64-release",
+      "displayName": "x64 | Release",
+      "inherits": "windows-vs",
+      "cacheVariables": {
+        "FSE_BUILD_TESTS": "ON",
+        "FSE_WARNINGS_AS_ERRORS": "OFF",
+        "FSE_ENABLE_CLANG_TIDY": "OFF"
+      }
+    },
+    {
+      "name": "x64-tidy",
+      "displayName": "x64 | Debug + clang-tidy",
+      "inherits": "x64-debug",
+      "cacheVariables": {
+        "FSE_ENABLE_CLANG_TIDY": "ON"
+      }
+    },
+    {
+      "name": "ci-msvc-release",
+      "displayName": "CI | MSVC Release",
+      "description": "Ninja + cl, used on windows-latest after sourcing the MSVC environment (GitHub runners ship VS 2022, not 2026).",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "FSE_BUILD_TESTS": "ON",
+        "FSE_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "ci-unix-base",
+      "hidden": true,
+      "displayName": "Ninja on a POSIX host (CI)",
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "ci-gcc-debug",
+      "displayName": "CI | gcc Debug + ASan/UBSan",
+      "inherits": "ci-unix-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "FSE_BUILD_TESTS": "ON",
+        "FSE_ENABLE_SANITIZERS": "ON",
+        "FSE_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "ci-gcc-release",
+      "displayName": "CI | gcc Release",
+      "inherits": "ci-unix-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_BUILD_TYPE": "Release",
+        "FSE_BUILD_TESTS": "ON",
+        "FSE_ENABLE_SANITIZERS": "OFF",
+        "FSE_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "ci-clang-release",
+      "displayName": "CI | clang Release",
+      "inherits": "ci-gcc-release",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "x64-debug",
+      "configurePreset": "x64-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "x64-release",
+      "configurePreset": "x64-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "x64-tidy",
+      "configurePreset": "x64-tidy",
+      "configuration": "Debug"
+    },
+    {
+      "name": "ci-msvc-release",
+      "configurePreset": "ci-msvc-release"
+    },
+    {
+      "name": "ci-gcc-debug",
+      "configurePreset": "ci-gcc-debug"
+    },
+    {
+      "name": "ci-gcc-release",
+      "configurePreset": "ci-gcc-release"
+    },
+    {
+      "name": "ci-clang-release",
+      "configurePreset": "ci-clang-release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "x64-debug",
+      "configurePreset": "x64-debug",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "x64-release",
+      "configurePreset": "x64-release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci-msvc-release",
+      "configurePreset": "ci-msvc-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci-gcc-debug",
+      "configurePreset": "ci-gcc-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci-gcc-release",
+      "configurePreset": "ci-gcc-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci-clang-release",
+      "configurePreset": "ci-clang-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

@@ -1,7 +1,29 @@
 ###############################################################################
 # Set default behavior to automatically normalize line endings.
+#
+# `eol=lf` additionally pins the working-tree line ending to LF on *every*
+# platform. Without it `text=auto` alone checks files out as CRLF on Windows,
+# which contradicts .editorconfig (`end_of_line = lf`) and means the bytes on
+# disk differ from the bytes in the repository. Keeping the tree LF-only makes
+# diffs reproducible across contributors and keeps shell scripts in CI safe.
+#
+# Windows-only script types are opted back into CRLF below.
 ###############################################################################
-* text=auto
+* text=auto eol=lf
+
+# Batch scripts must stay CRLF: cmd.exe mis-parses LF-only batch files.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets are never line-ending translated.
+*.png  binary
+*.jpg  binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.tlm  binary
 
 ###############################################################################
 # Set default behavior for command prompt diff.
