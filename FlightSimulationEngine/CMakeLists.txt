@@ -13,6 +13,7 @@
 # ---------------------------------------------------------------------------
 
 add_library(fse_core STATIC
+    src/flight_phase.cpp
     src/noise.cpp
 )
 
