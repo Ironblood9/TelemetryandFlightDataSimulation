@@ -30,6 +30,7 @@ include(GoogleTest)
 # --- fse_tests --------------------------------------------------------------
 add_executable(fse_tests
     test_build_contract.cpp
+    test_types.cpp
 )
 
 target_link_libraries(fse_tests PRIVATE
