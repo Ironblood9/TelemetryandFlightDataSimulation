@@ -36,6 +36,7 @@ add_executable(fse_tests
     test_atmosphere.cpp
     test_dynamics.cpp
     test_phase_table.cpp
+    test_phase_machine.cpp
 )
 
 target_link_libraries(fse_tests PRIVATE
