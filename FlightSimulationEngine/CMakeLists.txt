@@ -20,6 +20,7 @@ add_library(fse_core STATIC
     src/noise.cpp
     src/phase_machine.cpp
     src/sensor/sensor_suite.cpp
+    src/simulation.cpp
 )
 
 add_library(fse::core ALIAS fse_core)

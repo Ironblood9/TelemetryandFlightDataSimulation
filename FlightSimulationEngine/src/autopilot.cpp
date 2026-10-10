@@ -181,6 +181,23 @@ ControlInputs Autopilot::update_ground(const AircraftState& state, const Mission
             commands_.throttle = 0.0F;
             commands_.flap_deg = profile.landing_flap_deg;
             break;
+        case FlightPhase::kClimb:
+        case FlightPhase::kGoAround:
+            // Reached while still on the runway. The phase table hands over at
+            // rotation speed, which is the instant the nose comes up -- and the
+            // aircraft needs another second or two of runway to actually leave
+            // the ground. Falling through to the default here cut the throttle
+            // the moment the machine reached climb, so the aircraft sat on the
+            // runway at zero power, decelerated, and never flew the sortie at
+            // all.
+            //
+            // Keep flying the take-off until the height based routing hands over
+            // to the airborne law. Same commands as the ground roll, so the
+            // handover is invisible rather than a step change.
+            commands_.throttle = 1.0F;
+            commands_.pitch_deg =
+                (state.ias_mps >= parameters.rotate_ias_mps) ? gains_.rotate_pitch_deg : 0.0F;
+            break;
         case FlightPhase::kFailure:
             commands_.throttle = 0.0F;
             break;

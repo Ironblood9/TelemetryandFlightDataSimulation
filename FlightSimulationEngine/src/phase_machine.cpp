@@ -99,7 +99,20 @@ bool guard_touchdown_ok(const PhaseContext& context) noexcept
 {
     const bool on_ground   = altitude_agl(context.state) <= kTouchdownHeightM;
     const bool slow_enough = context.state.ias_mps <= context.profile.max_touchdown_ias_mps;
-    return on_ground && slow_enough && context.phase_elapsed_s >= kRolloutStopS;
+    const bool settled     = context.state.ground_speed_mps <= context.profile.taxi_accel_mps;
+
+    // `settled` is the part that was missing. The rollout timer alone was not
+    // enough, because two seconds after touchdown the aircraft is still rolling
+    // at twenty-odd metres per second -- which is well above the taxi speed, so
+    // the taxi guard cleared it for departure on the very next step and the
+    // aircraft taxied, rotated and took off again without ever stopping.
+    //
+    // Requiring the rollout to have actually finished also makes the two taxi
+    // guards mean different things, which they must: leaving the preflight hold
+    // is a matter of reaching taxi speed, while leaving the post-landing taxi is
+    // a matter of the aircraft being stopped and then accelerating again under
+    // its own power.
+    return on_ground && slow_enough && settled && context.phase_elapsed_s >= kRolloutStopS;
 }
 
 bool guard_touchdown_missed(const PhaseContext& context) noexcept
