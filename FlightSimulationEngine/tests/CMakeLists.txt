@@ -33,6 +33,7 @@ add_executable(fse_tests
     test_types.cpp
     test_noise.cpp
     test_phase_enum.cpp
+    test_atmosphere.cpp
 )
 
 target_link_libraries(fse_tests PRIVATE
