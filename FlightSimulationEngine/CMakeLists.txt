@@ -13,6 +13,7 @@
 # ---------------------------------------------------------------------------
 
 add_library(fse_core STATIC
+    src/autopilot.cpp
     src/atmosphere.cpp
     src/flight_model/aerodynamic_model.cpp
     src/flight_phase.cpp
