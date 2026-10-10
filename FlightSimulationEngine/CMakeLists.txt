@@ -17,6 +17,7 @@ add_library(fse_core STATIC
     src/flight_model/aerodynamic_model.cpp
     src/flight_phase.cpp
     src/noise.cpp
+    src/phase_machine.cpp
 )
 
 add_library(fse::core ALIAS fse_core)
