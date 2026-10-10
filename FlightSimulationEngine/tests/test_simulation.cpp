@@ -303,7 +303,12 @@ TEST(Simulation, TheCruiseTurnIsFollowedByAReturnToTheLegHeading)
     for (std::uint64_t i = 0; i < steps; ++i)
     {
         (void)simulation.step();
-        const Scalar elapsed = static_cast<Scalar>(static_cast<double>(i) * simulation.dt());
+        // Both operands cast explicitly: `i * dt` mixes an int with a float and the
+        // result is then narrowed back to Scalar, which trips -Wdouble-promotion on the
+        // compilers that enable it. MSVC does not warn here, which is exactly why the
+        // CI matrix includes gcc and clang.
+        const Scalar elapsed =
+            static_cast<Scalar>(static_cast<double>(i) * static_cast<double>(simulation.dt()));
 
         if (elapsed > kTurnStart && elapsed < kTurnEnd)
         {
