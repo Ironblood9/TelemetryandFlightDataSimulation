@@ -31,10 +31,12 @@ include(GoogleTest)
 add_executable(fse_tests
     test_build_contract.cpp
     test_types.cpp
+    test_noise.cpp
 )
 
 target_link_libraries(fse_tests PRIVATE
     fse::compile_options
+    fse::core
     GTest::gtest_main
 )
 
