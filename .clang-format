@@ -4,7 +4,20 @@
 # Studio C++ experience, so the code looks identical whether it is edited in
 # Visual Studio or through clang-format from a terminal or in CI.
 #
-# Run:  clang-format -i <files>
+# PINNED VERSION: clang-format 18.x
+#
+#   clang-format releases genuinely disagree about where to break a line, so the
+#   version is part of the contract and CI pins it (see .github/workflows/ci.yml).
+#   Formatting the tree with a different release will produce a red build that
+#   looks like a style regression but is only a version difference. Install the
+#   pinned version with:
+#
+#     pip install clang-format==18.1.8
+#
+#   Visual Studio bundles its own copy (22.x as of VS 2026). It is fine for
+#   editing, but do not use it to reformat: it will disagree with CI.
+#
+# Run:   clang-format -i <files>
 # Check: clang-format --dry-run --Werror <files>
 
 ---

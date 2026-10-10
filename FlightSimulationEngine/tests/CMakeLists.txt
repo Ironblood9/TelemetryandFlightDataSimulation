@@ -40,6 +40,7 @@ add_executable(fse_tests
     test_autopilot.cpp
     test_sensors.cpp
     test_simulation.cpp
+    test_determinism.cpp
 )
 
 target_link_libraries(fse_tests PRIVATE

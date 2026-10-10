@@ -4,10 +4,13 @@
 software side of avionics: deterministic simulation, a versioned binary wire
 protocol, lock-free real-time tasking, and a desktop telemetry display.**
 
-> **Status: milestone M0 of 9.** The build system, toolchain contract and CI
-> skeleton are in place. The simulation model, transport, real-time layer and
-> ground station are designed and scheduled but not yet implemented. See
-> [Roadmap](#roadmap) for exactly what exists today.
+> **Status: milestones M0 and M1 complete.** The simulation engine produces a
+> deterministic 100 Hz telemetry stream from a flight dynamics model with a real
+> sensor chain, and the whole sortie — taxi, take-off, climb, cruise with a
+> coordinated turn, descent, approach, flare and touchdown — is reproduced from a
+> single seed. The transport, real-time layer and ground station are designed and
+> scheduled but not yet implemented. See [Roadmap](#roadmap) for exactly what
+> exists today.
 
 ---
 
@@ -95,6 +98,36 @@ cmake --build --preset x64-debug
 ctest  --preset x64-debug
 ```
 
+### Running the simulation
+
+```powershell
+# A complete sortie with the phase trace on stderr
+.\out\build\x64-release\bin\Release\flight-sim.exe --duration 400
+
+# Write a telemetry trace and print nothing else
+.\out\build\x64-release\bin\Release\flight-sim.exe --duration 400 --csv out/flight.csv --quiet
+
+# Start mid-flight, latch a fault, change the rate
+.\out\build\x64-release\bin\Release\flight-sim.exe --phase cruise --rate 200
+.\out\build\x64-release\bin\Release\flight-sim.exe --fault engine_fire
+```
+
+A full flight, from the default profile:
+
+```
+  [    3.00 s] 000300  preflight    -> taxi         (checklist complete)
+  [    9.65 s] 000965  taxi         -> takeoff_roll (taxi speed reached, cleared for departure)
+  [   19.49 s] 001949  takeoff_roll -> climb        (rotation speed reached)
+  [  146.87 s] 014687  climb        -> cruise       (climb altitude captured)
+  [  186.88 s] 018688  cruise       -> descent      (cruise time elapsed)
+  [  266.82 s] 026682  descent      -> approach     (approach gate reached)
+  [  371.67 s] 037167  approach     -> landing      (flare entry)
+  [  384.19 s] 038419  landing      -> taxi         (touchdown within limits)
+```
+
+Every trace is reproducible: two runs at the same seed produce byte-identical
+CSV, which is a property the test suite asserts rather than a claim.
+
 In Visual Studio, use **File → Open → Folder** on the repository root; CMake
 Presets are picked up automatically and IntelliSense works as usual.
 
@@ -115,6 +148,22 @@ that XAML hot reload and the designer keep working.
 | `ci-msvc-release` | Windows · Ninja + `cl` (used by GitHub Actions) |
 
 ---
+
+## Formatting
+
+Style is `clang-format` with the configuration in `.clang-format` (Allman
+braces, 4 spaces, 100 columns). **The version is pinned to 18.x**, because
+clang-format releases genuinely disagree about where to break a line and a
+mismatch between releases looks exactly like a style regression:
+
+```powershell
+pip install clang-format==18.1.8
+clang-format -i (git ls-files '*.cpp' '*.hpp')
+```
+
+Visual Studio bundles its own copy (22.x). It is fine for editing, but using it
+to reformat will make CI fail on a pure version difference. When the check does
+fail it prints a per-file diff, so the difference is visible in the log.
 
 ## Testing
 
@@ -149,13 +198,35 @@ project exists to avoid: millimetres versus metres, degrees versus radians,
 
 **Fixed-step integration with an accumulator.** Variable-`dt` integration is
 simpler and looks fine, but it makes the simulation non-reproducible and makes
-jitter impossible to measure. Determinism is a property we intend to *test*, not
-intend to hope for.
+jitter impossible to measure. Timestamps are derived from the step index with
+integer arithmetic rather than accumulated, so step 3 600 000 is at exactly one
+hour on any platform.
 
 **Own PRNG rather than `<random>`.** `std::uniform_real_distribution` is not
 specified to produce the same values across implementations or versions. A
 simulation whose "same seed, same flight" claim cannot be trusted across
-compilers is not a simulation you can regression-test.
+compilers is not a simulation you can regression-test. The generator is PCG32,
+asserted against the upstream reference vectors.
+
+**A single force integrator with a ground constraint, not two models.** The
+runway and the air share one integrator; the landing gear is a non-penetration
+plus rolling friction applied after it. An earlier version chose between a ground
+handler and a flight integrator, and take-off chattered between the two — at
+rotation speed the wing's lift sits within a few percent of the weight, which is
+exactly the regime a discrete branch cannot represent.
+
+**Altitude hold written as inverse dynamics.** The commanded angle of attack is
+computed from the lift the aircraft needs *right now*, rather than as a fixed
+trim angle. A fixed 3 degree trim commands more than twice the lift a cruise
+attitude requires, which shows up as a climb that never settles and a descent
+that never starts.
+
+**Sensors modelled separately from the physics.** Telemetry never sees the true
+state; it sees what the air data computer and engine monitor *believe*. That
+belief is shaped by lag, bias, noise and validity rules — and every one of those
+is something a consumer of the stream has to cope with. The vertical speed
+channel is a derivative of a noisy barometric signal, so it averages over a long
+window; without that it reports hundreds of metres per second of noise.
 
 **Serialise field by field; never `memcpy` a struct to the wire.** Struct
 padding, alignment and host endianness make the naive version work on the
@@ -182,7 +253,7 @@ either implementation changes the contract.
 | Milestone | Focus | Deliverable | Status |
 |---|---|---|---|
 | **M0** | Toolchain & build system | CMake presets, warning policy, test + CI skeleton | **Done** |
-| M1 | Low-level C++ & data generation | Flight dynamics model, sensor suite, deterministic 100 Hz loop | Planned |
+| **M1** | Low-level C++ & data generation | Flight dynamics model, sensor suite, deterministic 100 Hz loop | **Done** |
 | M2 | Wire protocol | Versioned frame layout, CRC32, golden vectors | Planned |
 | M3 | Communications | UDP telemetry transport, TCP control link, gap statistics | Planned |
 | M4 | Real-time system | Priority task scheduler, SPSC ring buffer, watchdog, jitter report | Planned |

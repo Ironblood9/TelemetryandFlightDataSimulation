@@ -125,15 +125,40 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang-format-18
 
+      # The pinned version is the authority for formatting. Different clang-format
+      # releases genuinely disagree on where to break a line, so the check prints
+      # a diff rather than a bare exit code: a mismatch is then obvious from the
+      # log instead of requiring a bisect through the style options.
       - name: Check formatting
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          clang-format-18 --version
+
           mapfile -t sources < <(git ls-files -- '*.cpp' '*.cc' '*.hpp' '*.h')
           if [ "${#sources[@]}" -eq 0 ]; then
             echo "No C++ sources to check yet."
             exit 0
           fi
-          clang-format-18 --dry-run --Werror "${sources[@]}"
+
+          failed=0
+          for source in "${sources[@]}"; do
+            if ! diff -q -- "${source}" <(clang-format-18 -- "${source}") >/dev/null 2>&1; then
+              echo "::group::${source}"
+              diff -u -- "${source}" <(clang-format-18 -- "${source}") || true
+              echo "::endgroup::"
+              failed=1
+            fi
+          done
+
+          if [ "${failed}" -ne 0 ]; then
+            echo "::error::Formatting differs from .clang-format."
+            echo "Install the pinned version and reformat:"
+            echo "  pip install clang-format==18.1.8"
+            echo "  clang-format -i \$(git ls-files '*.cpp' '*.hpp')"
+            exit 1
+          fi
+
+          echo "Formatting OK (${#sources[@]} files)."
 
   # -------------------------------------------------------------------------
   # Advisory static analysis. Non-blocking until the M1 code base is large
