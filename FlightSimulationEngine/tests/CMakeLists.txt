@@ -38,6 +38,7 @@ add_executable(fse_tests
     test_phase_table.cpp
     test_phase_machine.cpp
     test_autopilot.cpp
+    test_sensors.cpp
 )
 
 target_link_libraries(fse_tests PRIVATE
