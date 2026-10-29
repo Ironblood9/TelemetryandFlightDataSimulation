@@ -33,6 +33,7 @@ add_executable(fse_tests
     test_crc32.cpp
     test_telemetry_frame.cpp
     test_frame_encoder.cpp
+    test_golden_vectors.cpp
     test_types.cpp
     test_noise.cpp
     test_phase_enum.cpp
@@ -54,6 +55,16 @@ target_link_libraries(fse_tests PRIVATE
 
 target_include_directories(fse_tests PRIVATE
     "${CMAKE_SOURCE_DIR}/FlightSimulationEngine/include"
+)
+
+configure_file(
+    "${CMAKE_SOURCE_DIR}/protocol/golden_vectors.bin"
+    "${CMAKE_CURRENT_BINARY_DIR}/golden_vectors.bin"
+    COPYONLY
+)
+
+target_compile_definitions(fse_tests PRIVATE
+    FSE_GOLDEN_VECTORS_PATH="golden_vectors.bin"
 )
 
 # NOTE: gtest_discover_tests() is deliberately NOT used. It runs the test
