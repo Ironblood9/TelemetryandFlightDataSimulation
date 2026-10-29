@@ -13,6 +13,7 @@
 # ---------------------------------------------------------------------------
 
 add_library(fse_core STATIC
+    ${CMAKE_SOURCE_DIR}/protocol/crc32.cpp
     src/autopilot.cpp
     src/atmosphere.cpp
     src/flight_model/aerodynamic_model.cpp
@@ -28,6 +29,7 @@ add_library(fse::core ALIAS fse_core)
 target_include_directories(fse_core
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
         $<INSTALL_INTERFACE:include>
 )
 

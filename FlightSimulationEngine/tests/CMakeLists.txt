@@ -30,6 +30,7 @@ include(GoogleTest)
 # --- fse_tests --------------------------------------------------------------
 add_executable(fse_tests
     test_build_contract.cpp
+    test_crc32.cpp
     test_types.cpp
     test_noise.cpp
     test_phase_enum.cpp
