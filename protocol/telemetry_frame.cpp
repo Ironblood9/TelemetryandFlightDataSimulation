@@ -56,16 +56,14 @@ void write_f32(std::uint8_t* buf, float value) noexcept
 
 std::uint16_t read_u16(const std::uint8_t* buf) noexcept
 {
-    return static_cast<std::uint16_t>(buf[0]) |
-           (static_cast<std::uint16_t>(buf[1]) << 8);
+    return static_cast<std::uint16_t>(static_cast<std::uint16_t>(buf[0]) |
+                                      (static_cast<std::uint16_t>(buf[1]) << 8));
 }
 
 std::uint32_t read_u32(const std::uint8_t* buf) noexcept
 {
-    return static_cast<std::uint32_t>(buf[0]) |
-           (static_cast<std::uint32_t>(buf[1]) << 8) |
-           (static_cast<std::uint32_t>(buf[2]) << 16) |
-           (static_cast<std::uint32_t>(buf[3]) << 24);
+    return static_cast<std::uint32_t>(buf[0]) | (static_cast<std::uint32_t>(buf[1]) << 8) |
+           (static_cast<std::uint32_t>(buf[2]) << 16) | (static_cast<std::uint32_t>(buf[3]) << 24);
 }
 
 std::uint64_t read_u64(const std::uint8_t* buf) noexcept
@@ -80,14 +78,14 @@ std::uint64_t read_u64(const std::uint8_t* buf) noexcept
 
 float read_f32(const std::uint8_t* buf) noexcept
 {
-    const std::uint32_t bits = read_u32(buf);
-    float value = 0.0F;
+    const std::uint32_t bits  = read_u32(buf);
+    float               value = 0.0F;
     static_assert(sizeof(bits) == sizeof(value));
     std::memcpy(&value, &bits, sizeof(value));
     return value;
 }
 
-}  // namespace
+} // namespace
 
 void encode(const TelemetryFrame& frame, std::uint8_t* buffer) noexcept
 {
@@ -126,14 +124,14 @@ void encode(const TelemetryFrame& frame, std::uint8_t* buffer) noexcept
 
 bool decode(const std::uint8_t* buffer, TelemetryFrame& frame) noexcept
 {
-    frame.magic          = read_u16(buffer + 0);
-    frame.version        = buffer[2];
-    frame.aircraft_id    = buffer[3];
-    frame.sequence       = read_u32(buffer + 4);
-    frame.timestamp_ns   = read_u64(buffer + 8);
-    frame.phase          = buffer[16];
-    frame.status_flags   = read_u16(buffer + 17);
-    frame.reserved       = buffer[19];
+    frame.magic        = read_u16(buffer + 0);
+    frame.version      = buffer[2];
+    frame.aircraft_id  = buffer[3];
+    frame.sequence     = read_u32(buffer + 4);
+    frame.timestamp_ns = read_u64(buffer + 8);
+    frame.phase        = buffer[16];
+    frame.status_flags = read_u16(buffer + 17);
+    frame.reserved     = buffer[19];
 
     frame.airspeed_mps       = read_f32(buffer + 20);
     frame.altitude_m         = read_f32(buffer + 24);
@@ -166,5 +164,5 @@ std::uint32_t compute_crc(const std::uint8_t* buffer) noexcept
     return crc32_iso_hdlc(buffer, kCrcCoverage);
 }
 
-}  // namespace protocol
-}  // namespace fse
+} // namespace protocol
+} // namespace fse

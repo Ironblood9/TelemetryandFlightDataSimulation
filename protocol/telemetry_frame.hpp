@@ -42,34 +42,34 @@ constexpr std::size_t kCrcCoverage = 80U;
 struct TelemetryFrame
 {
     // --- Header (bytes 0..19) ---
-    std::uint16_t magic;          // 0:  0xA55A
-    std::uint8_t  version;        // 2:  protocol version
-    std::uint8_t  aircraft_id;    // 3:  slot number
-    std::uint32_t sequence;       // 4:  monotonic, wraps at 2^32
-    std::uint64_t timestamp_ns;   // 8:  monotonic clock, nanoseconds
-    std::uint8_t  phase;          // 16: FlightPhase
-    std::uint16_t status_flags;    // 17: bitfield
-    std::uint8_t  reserved;       // 19: padding to 4-byte align airspeed
+    std::uint16_t magic;        // 0:  0xA55A
+    std::uint8_t  version;      // 2:  protocol version
+    std::uint8_t  aircraft_id;  // 3:  slot number
+    std::uint32_t sequence;     // 4:  monotonic, wraps at 2^32
+    std::uint64_t timestamp_ns; // 8:  monotonic clock, nanoseconds
+    std::uint8_t  phase;        // 16: FlightPhase
+    std::uint16_t status_flags; // 17: bitfield
+    std::uint8_t  reserved;     // 19: padding to 4-byte align airspeed
 
     // --- Payload (bytes 20..79) ---
-    float airspeed_mps;           // 20: indicated airspeed
-    float altitude_m;             // 24: above mean sea level
-    float vertical_speed_mps;     // 28: rate of climb, positive up
-    float heading_deg;            // 32: [0, 360), clockwise from true north
-    float pitch_deg;              // 36: [-90, 90], positive nose-up
-    float roll_deg;               // 40: [-180, 180), positive right-wing-down
+    float airspeed_mps;       // 20: indicated airspeed
+    float altitude_m;         // 24: above mean sea level
+    float vertical_speed_mps; // 28: rate of climb, positive up
+    float heading_deg;        // 32: [0, 360), clockwise from true north
+    float pitch_deg;          // 36: [-90, 90], positive nose-up
+    float roll_deg;           // 40: [-180, 180), positive right-wing-down
 
-    float engine_temp_c[4];       // 44: left outer, left inner, right inner, right outer
+    float engine_temp_c[4]; // 44: left outer, left inner, right inner, right outer
 
-    float fuel_press_kpa;         // 60: gauge pressure
-    float oil_press_kpa;          // 64: gauge pressure
+    float fuel_press_kpa; // 60: gauge pressure
+    float oil_press_kpa;  // 64: gauge pressure
 
-    float accel_x_mps2;           // 68: body axes, specific force
-    float accel_y_mps2;           // 72
-    float accel_z_mps2;           // 76: includes gravity, 1 g at rest
+    float accel_x_mps2; // 68: body axes, specific force
+    float accel_y_mps2; // 72
+    float accel_z_mps2; // 76: includes gravity, 1 g at rest
 
     // --- Trailer (bytes 80..83) ---
-    std::uint32_t crc32;          // 80: over bytes [0, 80)
+    std::uint32_t crc32; // 80: over bytes [0, 80)
 };
 #pragma pack(pop)
 
@@ -114,5 +114,5 @@ void encode(const TelemetryFrame& frame, std::uint8_t* buffer) noexcept;
 /// to check integrity before committing to a decode.
 [[nodiscard]] std::uint32_t compute_crc(const std::uint8_t* buffer) noexcept;
 
-}  // namespace protocol
-}  // namespace fse
+} // namespace protocol
+} // namespace fse
