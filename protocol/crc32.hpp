@@ -42,5 +42,5 @@ template <typename Range>
     }
 }
 
-}  // namespace protocol
-}  // namespace fse
+} // namespace protocol
+} // namespace fse

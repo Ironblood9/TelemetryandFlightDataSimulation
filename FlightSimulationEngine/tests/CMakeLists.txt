@@ -31,6 +31,7 @@ include(GoogleTest)
 add_executable(fse_tests
     test_build_contract.cpp
     test_crc32.cpp
+    test_telemetry_frame.cpp
     test_types.cpp
     test_noise.cpp
     test_phase_enum.cpp

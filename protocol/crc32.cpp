@@ -40,7 +40,7 @@ constexpr std::array<std::uint32_t, 256> make_table()
 
 constexpr std::array<std::uint32_t, 256> kTable = make_table();
 
-}  // namespace
+} // namespace
 
 std::uint32_t crc32_iso_hdlc(const std::uint8_t* data, std::size_t length) noexcept
 {
@@ -52,5 +52,5 @@ std::uint32_t crc32_iso_hdlc(const std::uint8_t* data, std::size_t length) noexc
     return crc ^ 0xFFFFFFFFU;
 }
 
-}  // namespace protocol
-}  // namespace fse
+} // namespace protocol
+} // namespace fse

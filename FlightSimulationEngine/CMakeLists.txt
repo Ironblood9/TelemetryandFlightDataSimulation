@@ -14,6 +14,7 @@
 
 add_library(fse_core STATIC
     ${CMAKE_SOURCE_DIR}/protocol/crc32.cpp
+    ${CMAKE_SOURCE_DIR}/protocol/telemetry_frame.cpp
     src/autopilot.cpp
     src/atmosphere.cpp
     src/flight_model/aerodynamic_model.cpp
